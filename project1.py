@@ -1,29 +1,33 @@
-import sys, Queue
+## NOTES AND QUESTIONS ##
+# 1) Do I have to empty the clear list each time iddfs increases depth limit?
+# 2) SOLVED
+# 3) Do we count expanded nodes or popped nodes?
+# 4) How is iddfs space complexity O(b*d)
+# 5) Is going from 25 nodes expanded to 179 supposed to be good?
+# 6) My DFS finds a longer path than BFS?
+#
+import sys, collections
 
 # GLOBAL VARIABLES #
-initialStateFile = None
-goalStateFile    = None
-mode             = None
-outputFile       = None
-possibleActions  = [[1,0],[2,0],[0,1],[1,1],[0,2]]
-
-maxDepth = 0
-maxId = 0
+initialStateFile  = None
+goalStateFile     = None
+mode              = None
+outputFile        = None
+possibleActions   = [[1,0],[2,0],[0,1],[1,1],[0,2]]
+depthLimit        = 0
+nodeCount         = 0
+lastExpansion     = 0
+numOfNodesCreated = 0
 
 class Node():
     def __init__(self, leftSide, rightSide, parent, action, depth):
-        global maxDepth, maxId
+        global numOfNodesCreated
         self.leftSide = leftSide
         self.rightSide = rightSide
         self.parent = parent
         self.action = action
         self.depth = depth
-        maxId += 1
-        print maxId
-        #if self.depth > maxDepth:
-            #print "currentDepth = %d" % self.depth
-            #print "number of nodes = %d" % self.id
-            #maxDepth += 1
+        numOfNodesCreated += 1
 
 class Result():
     def __init__(self, startSide, endSide, action, endBoatSide):
@@ -44,29 +48,47 @@ class Result():
         self.action = action
 
 def uninformedSearch(initialNode, goalNode, fringe):
-    closedList = set()
+    global nodeCount, lastExpansion, depthLimit, numOfNodesCreated
+    closedList = []
     fringe.put(initialNode)
     while True:
         if fringe.empty():
-            sys.exit("No solution found!")
+            # When in iddfs mode, increment depthLimit and restart search
+            if mode == "iddfs":
+                if depthLimit > 400:
+                    exit(1)
+                lastExpansion = 0
+                fringe.put(initialNode)
+                depthLimit += 1
+                numOfNodesCreated = 0
+                closedList = []
+                print depthLimit
+                continue
+            else:
+                sys.exit("No solution found!")
         currentNode = fringe.get()
+        nodeCount += lastExpansion
+        lastExpansion = 0
         if goalTest(currentNode, goalNode):
+            print currentNode.depth
             return currentNode
         if not inClosedList(currentNode, closedList):
-            closedList.add(currentNode)
+            closedList.append(currentNode)
             map(fringe.put, expand(currentNode))
 
 def inClosedList(node, closedList):
     for x in closedList:
-        if (node.leftSide == x.leftSide) and (node.rightSide == x.rightSide):
+        if (node.leftSide == x.leftSide) and (node.rightSide == x.rightSide) and (node.depth >= x.depth):
             return True
     return False
 
 def expand(node):
-    successors = set()
+    global lastExpansion
+    successors = []
     for result in successor_fn(node):
         newNode = Node(result.leftSide, result.rightSide, node, result.action, node.depth + 1)
-        successors.add(newNode)
+        successors.append(newNode)
+        lastExpansion += 1
     return successors
 
 def goalTest(node, goalNode):
@@ -77,6 +99,9 @@ def goalTest(node, goalNode):
 
 def successor_fn(node):
     global possibleActions
+    if mode == "iddfs":
+        if node.depth == depthLimit:
+            return []
     allowedActions = filter(lambda x: testAction(x, node), possibleActions)
     results = map(lambda y: applyAction(y, node), allowedActions)
     return results
@@ -89,18 +114,19 @@ def applyAction(action, node):
     return result
 
 def testAction(action, node):
+    # Determine which side the boat is on
     if node.rightSide[2] == 1:
         startSide = list(node.rightSide)
         endSide = list(node.leftSide)
     else:
         startSide = list(node.leftSide)
         endSide = list(node.rightSide)
-
+    # Make perform the action and see results
     startSide[0] = startSide[0] - action[0]
     startSide[1] = startSide[1] - action[1]
     endSide[0] = endSide[0] + action[0]
     endSide[1] = endSide[1] + action[1]
-
+    # If results cause more cannibals than missionaires, return false
     if (startSide[0] < 0) or (startSide[1] < 0) or (endSide[0] < 0) or (endSide[1] < 0):
         return False
     elif ((startSide[0] == 0) or (startSide[0] >= startSide[1])) and (endSide[0] == 0 or (endSide[0] >= endSide[1])):
@@ -119,7 +145,6 @@ def getNodePath(node):
         except:
             break
         currentNode = currentNode.parent
-
     return pathToNode[::-1]
 
 def getStateFromFile(file):
@@ -127,11 +152,10 @@ def getStateFromFile(file):
         content = f.readlines()
     return Node(map(int, content[0].strip('\n').split(',')), map(int, content[1].strip('\n').split(',')), None, None, 0)
 
-def outputStateToFile(file, state):
+def outputPathToFile(file, path):
     f = open(file, 'w')
-    f.write(str(state.leftSide)[1:-1].replace("'", "").replace(" ", ""))
+    f.write(str(path))
     f.write('\n')
-    f.write(str(state.rightSide)[1:-1].replace("'", "").replace(" ", ""))
     f.close()
 
 def printState(state):
@@ -144,16 +168,17 @@ def main():
 
     # Choose data structure based on mode
     if mode == "bfs":
-        fringe = Queue.Queue()
+        fringe = collections.deque()
     elif (mode == "dfs") or (mode == "iddfs"):
-        fringe = Queue.LifoQueue()
+        fringe = collections.LifoQueue()
     else:
         sys.exit('Selected mode not supported')
 
     resultNode = uninformedSearch(initialState, goalState, fringe)
 
-    outputStateToFile(outputFile, initialState)
+    outputPathToFile(outputFile, getNodePath(resultNode))
     print getNodePath(resultNode)
+    print "Expanded %d nodes" % nodeCount
 
 if __name__ == "__main__":
     if len(sys.argv) < 5:
