@@ -27,6 +27,7 @@ class Node():
         self.parent = parent
         self.action = action
         self.depth = depth
+        self.key = "".join(str(x) for x in (self.leftSide + self.rightSide))
         numOfNodesCreated += 1
 
 class Result():
@@ -49,7 +50,7 @@ class Result():
 
 def uninformedSearch(initialNode, goalNode, fringe):
     global nodeCount, lastExpansion, depthLimit, numOfNodesCreated
-    closedList = []
+    closedList = {}
     fringe.append(initialNode)
     while True:
         if len(fringe) == 0:
@@ -61,7 +62,7 @@ def uninformedSearch(initialNode, goalNode, fringe):
                 fringe.append(initialNode)
                 depthLimit += 1
                 numOfNodesCreated = 0
-                closedList = []
+                closedList = {}
                 print depthLimit
                 continue
             else:
@@ -70,20 +71,24 @@ def uninformedSearch(initialNode, goalNode, fringe):
             currentNode = fringe.popleft()
         else:
             currentNode = fringe.pop()
-        nodeCount += lastExpansion
-        lastExpansion = 0
+
         if goalTest(currentNode, goalNode):
             print currentNode.depth
             return currentNode
         if not inClosedList(currentNode, closedList):
-            closedList.append(currentNode)
+            nodeCount += 1
+            closedList[currentNode.key] = currentNode.depth
             map(fringe.append, expand(currentNode))
 
+# TODO: need third constraint for iddfs to get optimal solution
 def inClosedList(node, closedList):
-    for x in closedList:
-        if (node.leftSide == x.leftSide) and (node.rightSide == x.rightSide):
+    if node.key in closedList:
+        if node.depth >= closedList[node.key]:
             return True
-    return False
+        else:
+            return False
+    else:
+        return False
 
 def expand(node):
     global lastExpansion
@@ -180,6 +185,7 @@ def main():
     outputPathToFile(outputFile, getNodePath(resultNode))
     print getNodePath(resultNode)
     print "Expanded %d nodes" % nodeCount
+    print "nodes created: %d" % numOfNodesCreated
 
 if __name__ == "__main__":
     if len(sys.argv) < 5:
