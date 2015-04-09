@@ -50,15 +50,15 @@ class Result():
 def uninformedSearch(initialNode, goalNode, fringe):
     global nodeCount, lastExpansion, depthLimit, numOfNodesCreated
     closedList = []
-    fringe.put(initialNode)
+    fringe.append(initialNode)
     while True:
-        if fringe.empty():
+        if len(fringe) == 0:
             # When in iddfs mode, increment depthLimit and restart search
             if mode == "iddfs":
                 if depthLimit > 400:
                     exit(1)
                 lastExpansion = 0
-                fringe.put(initialNode)
+                fringe.append(initialNode)
                 depthLimit += 1
                 numOfNodesCreated = 0
                 closedList = []
@@ -66,7 +66,10 @@ def uninformedSearch(initialNode, goalNode, fringe):
                 continue
             else:
                 sys.exit("No solution found!")
-        currentNode = fringe.get()
+        if mode == "bfs":
+            currentNode = fringe.popleft()
+        else:
+            currentNode = fringe.pop()
         nodeCount += lastExpansion
         lastExpansion = 0
         if goalTest(currentNode, goalNode):
@@ -74,11 +77,11 @@ def uninformedSearch(initialNode, goalNode, fringe):
             return currentNode
         if not inClosedList(currentNode, closedList):
             closedList.append(currentNode)
-            map(fringe.put, expand(currentNode))
+            map(fringe.append, expand(currentNode))
 
 def inClosedList(node, closedList):
     for x in closedList:
-        if (node.leftSide == x.leftSide) and (node.rightSide == x.rightSide) and (node.depth >= x.depth):
+        if (node.leftSide == x.leftSide) and (node.rightSide == x.rightSide):
             return True
     return False
 
@@ -167,10 +170,8 @@ def main():
     goalState    = getStateFromFile(goalStateFile)
 
     # Choose data structure based on mode
-    if mode == "bfs":
+    if (mode == "bfs") or (mode == "dfs") or (mode == "iddfs"):
         fringe = collections.deque()
-    elif (mode == "dfs") or (mode == "iddfs"):
-        fringe = collections.LifoQueue()
     else:
         sys.exit('Selected mode not supported')
 
