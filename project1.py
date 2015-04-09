@@ -6,7 +6,7 @@
 # 5) Is going from 25 nodes expanded to 179 supposed to be good?
 # 6) My DFS finds a longer path than BFS?
 #
-import sys, collections
+import sys, collections, heapq
 
 # GLOBAL VARIABLES #
 initialStateFile  = None
@@ -20,15 +20,33 @@ lastExpansion     = 0
 numOfNodesCreated = 0
 
 class Node():
-    def __init__(self, leftSide, rightSide, parent, action, depth):
+    def __init__(self, leftSide, rightSide, parent, action, depth, pathcost):
         global numOfNodesCreated
         self.leftSide = leftSide
         self.rightSide = rightSide
         self.parent = parent
         self.action = action
         self.depth = depth
-        self.key = "".join(str(x) for x in (self.leftSide + self.rightSide))
+        self.pathcost = pathcost
+        self.key = tuple(self.leftSide + self.rightSide)
+        #print self.key
         numOfNodesCreated += 1
+
+
+class PriorityQueue:
+    def __init__(self):
+        self._queue = []
+        self._index = 0
+
+    def push(self, item, priority):
+        heapq.heappush(self._queue, (-priority, self._index, item))
+        self._index += 1
+
+    def pop(self):
+        return heapq.heappop(self._queue)[-1]
+
+    def __len__(self):
+        return len(self._queue)
 
 class Result():
     def __init__(self, startSide, endSide, action, endBoatSide):
@@ -51,7 +69,10 @@ class Result():
 def uninformedSearch(initialNode, goalNode, fringe):
     global nodeCount, lastExpansion, depthLimit, numOfNodesCreated
     closedList = {}
-    fringe.append(initialNode)
+    if mode == "a*":
+        fringe.push(initialNode, initialNode.pathcost)
+    else:
+        fringe.append(initialNode)
     while True:
         if len(fringe) == 0:
             # When in iddfs mode, increment depthLimit and restart search
@@ -63,7 +84,8 @@ def uninformedSearch(initialNode, goalNode, fringe):
                 depthLimit += 1
                 numOfNodesCreated = 0
                 closedList = {}
-                print depthLimit
+                if depthLimit % 50 == 0:
+                    print depthLimit
                 continue
             else:
                 sys.exit("No solution found!")
@@ -71,32 +93,31 @@ def uninformedSearch(initialNode, goalNode, fringe):
             currentNode = fringe.popleft()
         else:
             currentNode = fringe.pop()
-
         if goalTest(currentNode, goalNode):
             print currentNode.depth
             return currentNode
         if not inClosedList(currentNode, closedList):
             nodeCount += 1
             closedList[currentNode.key] = currentNode.depth
-            map(fringe.append, expand(currentNode))
+            if mode == "a*":
+                map(lambda x: fringe.push(x, x.pathcost), expand(currentNode))
+            else:
+                map(fringe.append, expand(currentNode))
 
 # TODO: need third constraint for iddfs to get optimal solution
 def inClosedList(node, closedList):
     if node.key in closedList:
         if node.depth >= closedList[node.key]:
             return True
-        else:
-            return False
     else:
         return False
 
+
 def expand(node):
-    global lastExpansion
     successors = []
     for result in successor_fn(node):
-        newNode = Node(result.leftSide, result.rightSide, node, result.action, node.depth + 1)
+        newNode = Node(result.leftSide, result.rightSide, node, result.action, node.depth + 1, node.depth + 1)
         successors.append(newNode)
-        lastExpansion += 1
     return successors
 
 def goalTest(node, goalNode):
@@ -158,7 +179,7 @@ def getNodePath(node):
 def getStateFromFile(file):
     with open(file) as f:
         content = f.readlines()
-    return Node(map(int, content[0].strip('\n').split(',')), map(int, content[1].strip('\n').split(',')), None, None, 0)
+    return Node(map(int, content[0].strip('\n').split(',')), map(int, content[1].strip('\n').split(',')), None, None, 0, 0)
 
 def outputPathToFile(file, path):
     f = open(file, 'w')
@@ -177,6 +198,8 @@ def main():
     # Choose data structure based on mode
     if (mode == "bfs") or (mode == "dfs") or (mode == "iddfs"):
         fringe = collections.deque()
+    elif (mode == "a*"):
+        fringe = PriorityQueue()
     else:
         sys.exit('Selected mode not supported')
 
