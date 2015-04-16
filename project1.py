@@ -1,11 +1,8 @@
-## NOTES AND QUESTIONS ##
-# 1) Do I have to empty the clear list each time iddfs increases depth limit?
-# 2) SOLVED
-# 3) Do we count expanded nodes or popped nodes?
-# 4) How is iddfs space complexity O(b*d)
-# 5) Is going from 25 nodes expanded to 179 supposed to be good?
-# 6) My DFS finds a longer path than BFS?
-#
+# Author: Bryant Hayes
+# Date: April 14th 2015
+# CS 331 - Uninformed/Informed Search
+# Programming Assignment #1
+
 import sys, collections, heapq
 
 # GLOBAL VARIABLES #
@@ -18,7 +15,9 @@ depthLimit        = 0
 nodeCount         = 0
 lastExpansion     = 0
 numOfNodesCreated = 0
+goalState = None
 
+# Node that represents a state
 class Node():
     def __init__(self, leftSide, rightSide, parent, action, depth, pathcost):
         global numOfNodesCreated
@@ -29,17 +28,16 @@ class Node():
         self.depth = depth
         self.pathcost = pathcost
         self.key = tuple(self.leftSide + self.rightSide)
-        #print self.key
         numOfNodesCreated += 1
 
-
+# Class to implement a priority queue
 class PriorityQueue:
     def __init__(self):
         self._queue = []
         self._index = 0
 
     def push(self, item, priority):
-        heapq.heappush(self._queue, (-priority, self._index, item))
+        heapq.heappush(self._queue, (priority, self._index, item))
         self._index += 1
 
     def pop(self):
@@ -48,6 +46,7 @@ class PriorityQueue:
     def __len__(self):
         return len(self._queue)
 
+# Stores the result of a given action
 class Result():
     def __init__(self, startSide, endSide, action, endBoatSide):
         startSide[0] = startSide[0] - action[0]
@@ -66,6 +65,8 @@ class Result():
             self.leftSide[2] = 1
         self.action = action
 
+# Main function that executes the search, both uninformed and informed
+# regardless of the name. Based off the pseudocode for GraphSearch
 def uninformedSearch(initialNode, goalNode, fringe):
     global nodeCount, lastExpansion, depthLimit, numOfNodesCreated
     closedList = {}
@@ -77,34 +78,36 @@ def uninformedSearch(initialNode, goalNode, fringe):
         if len(fringe) == 0:
             # When in iddfs mode, increment depthLimit and restart search
             if mode == "iddfs":
-                if depthLimit > 400:
+                if depthLimit > 500:
                     exit(1)
                 lastExpansion = 0
                 fringe.append(initialNode)
                 depthLimit += 1
                 numOfNodesCreated = 0
                 closedList = {}
-                if depthLimit % 50 == 0:
-                    print depthLimit
                 continue
             else:
                 sys.exit("No solution found!")
+
         if mode == "bfs":
             currentNode = fringe.popleft()
         else:
             currentNode = fringe.pop()
+
         if goalTest(currentNode, goalNode):
-            print currentNode.depth
             return currentNode
+
         if not inClosedList(currentNode, closedList):
+            if mode == "dfs" and currentNode.depth >= 500:
+                continue
             nodeCount += 1
             closedList[currentNode.key] = currentNode.depth
             if mode == "a*":
-                map(lambda x: fringe.push(x, x.pathcost), expand(currentNode))
+                map(lambda x: fringe.push(x, x.pathcost + getHueristic(x, goalState)), expand(currentNode))
             else:
                 map(fringe.append, expand(currentNode))
 
-# TODO: need third constraint for iddfs to get optimal solution
+# Checks to see if a given node is in the closed list or not
 def inClosedList(node, closedList):
     if node.key in closedList:
         if node.depth >= closedList[node.key]:
@@ -112,7 +115,7 @@ def inClosedList(node, closedList):
     else:
         return False
 
-
+# For each success node, expand
 def expand(node):
     successors = []
     for result in successor_fn(node):
@@ -120,12 +123,14 @@ def expand(node):
         successors.append(newNode)
     return successors
 
+# Checks to see if the given node matches our goal state
 def goalTest(node, goalNode):
     if (node.leftSide == goalNode.leftSide) and (node.rightSide == goalNode.rightSide):
         return True
     else:
         return False
 
+# Checks to see all successors
 def successor_fn(node):
     global possibleActions
     if mode == "iddfs":
@@ -135,6 +140,7 @@ def successor_fn(node):
     results = map(lambda y: applyAction(y, node), allowedActions)
     return results
 
+# Given an action it applies that action and updates the new states/nodes
 def applyAction(action, node):
     if node.rightSide[2] == 1:
         result = Result(list(node.rightSide), list(node.leftSide), action, "left")
@@ -142,6 +148,7 @@ def applyAction(action, node):
         result = Result(list(node.leftSide), list(node.rightSide), action, "right")
     return result
 
+# Check to see if the given action is allowed
 def testAction(action, node):
     # Determine which side the boat is on
     if node.rightSide[2] == 1:
@@ -163,6 +170,16 @@ def testAction(action, node):
     else:
         return False
 
+# Returns the hueristic to get added to the pathcost
+def getHueristic(currentNode, goalNode):
+    # Determine which side the boat is on
+    if goalNode.rightSide[2] == 1:
+        retval = (currentNode.leftSide[0] + currentNode.leftSide[1]) - 1
+    else:
+        retval = (currentNode.rightSide[0] + currentNode.rightSide[1]) - 1
+    return retval
+
+# Given the result node, trace back through parents to find path.
 def getNodePath(node):
     currentNode = node
     pathToNode = []
@@ -176,24 +193,30 @@ def getNodePath(node):
         currentNode = currentNode.parent
     return pathToNode[::-1]
 
+# Read state to node from file
 def getStateFromFile(file):
     with open(file) as f:
         content = f.readlines()
     return Node(map(int, content[0].strip('\n').split(',')), map(int, content[1].strip('\n').split(',')), None, None, 0, 0)
 
+# Save node path to a file
 def outputPathToFile(file, path):
     f = open(file, 'w')
     f.write(str(path))
     f.write('\n')
     f.close()
 
+# Print state given a node
 def printState(state):
     print str(state.leftSide)[1:-1].replace(" ", "")
     print str(state.rightSide)[1:-1].replace(" ", "")
 
+# Main function, code starts here
 def main():
+    global goalState
     initialState = getStateFromFile(initialStateFile)
     goalState    = getStateFromFile(goalStateFile)
+
 
     # Choose data structure based on mode
     if (mode == "bfs") or (mode == "dfs") or (mode == "iddfs"):
@@ -208,8 +231,9 @@ def main():
     outputPathToFile(outputFile, getNodePath(resultNode))
     print getNodePath(resultNode)
     print "Expanded %d nodes" % nodeCount
-    print "nodes created: %d" % numOfNodesCreated
+    print "Length of Solution Path: %d" % len(getNodePath(resultNode))
 
+# Check for correct arguements
 if __name__ == "__main__":
     if len(sys.argv) < 5:
         sys.exit('Incorrect number of arguments:\n<initial> <goal> <mode> <output>')
