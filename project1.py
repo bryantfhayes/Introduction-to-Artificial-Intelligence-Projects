@@ -217,7 +217,6 @@ def main():
     initialState = getStateFromFile(initialStateFile)
     goalState    = getStateFromFile(goalStateFile)
 
-
     # Choose data structure based on mode
     if (mode == "bfs") or (mode == "dfs") or (mode == "iddfs"):
         fringe = collections.deque()
