@@ -19,6 +19,13 @@
 class MinimaxPlayer : public Player {
 public:
 
+	struct OthelloNode {
+		int column;
+		int row;
+		int value;
+		OthelloBoard* board;
+	};
+
 	/**
 	 * @param symb This is the symbol for the minimax player's pieces
 	 */
@@ -43,7 +50,11 @@ public:
     MinimaxPlayer* clone();
 
 private:
-
+	OthelloNode* get_successors(OthelloNode* successors, OthelloBoard* current_board, int& num_of_successors);
+	int max_value(OthelloBoard* b);
+	int min_value(OthelloBoard* b);
+	bool terminal_test(OthelloBoard* b);
+	int utility(OthelloBoard* b);
 };
 
 

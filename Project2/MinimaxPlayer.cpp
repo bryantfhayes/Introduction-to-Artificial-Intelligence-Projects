@@ -7,8 +7,13 @@
 #include <iostream>
 #include <assert.h>
 #include "MinimaxPlayer.h"
+#include <algorithm>
 
 using std::vector;
+
+#define TRUE 1
+#define FALSE 0
+
 
 MinimaxPlayer::MinimaxPlayer(char symb) :
 		Player(symb) {
@@ -19,19 +24,117 @@ MinimaxPlayer::~MinimaxPlayer() {
 
 }
 
-void MinimaxPlayer::get_move(OthelloBoard* b, int& col, int& row) {
-    int i, j = 0;
-	int c, r = 0;
-
-	for(c = 0; c < b->get_num_cols(); c++){
-		for(r = 0; r < b->get_num_rows(); r++){
-			if(b->is_legal_move(c, r, symbol)){
-				col = c;
-				row = r;
-				return;
+// Check every combination of col and row and see if there are
+// any legal moves. If a move is legal add it to the array of successors and
+// increment counter.
+MinimaxPlayer::OthelloNode* MinimaxPlayer::get_successors(OthelloNode* successors, OthelloBoard* current_board, int& num_of_successors) {
+	int row, col = 0;
+	for(row = 0; row < current_board->get_num_rows(); row++) {
+		for(col = 0; col < current_board->get_num_cols(); col++) {
+			if(current_board->is_legal_move(col, row, symbol)) {
+				successors[num_of_successors].board = new OthelloBoard(*(current_board));
+				successors[num_of_successors].board->play_move(col, row, symbol);
+				successors[num_of_successors].column = col;
+				successors[num_of_successors].row = row;
+				successors[num_of_successors].value = -1;
+				num_of_successors++;
 			}
 		}
 	}
+	return successors;
+}
+
+// MIN-VALUE(state)
+int MinimaxPlayer::min_value(OthelloBoard* b) {
+	if(terminal_test(b)) {
+		return utility(b);
+	}
+	int value = 100;
+	int num_of_successors = 0;
+	int i = 0;
+	MinimaxPlayer::OthelloNode successors[(b->get_num_cols() * b->get_num_rows()) - 4];
+
+	MinimaxPlayer::OthelloNode* successor_list = get_successors(successors, b, num_of_successors);
+
+	for(i = 0; i < num_of_successors; i++) {
+		value = std::min(value, max_value(successor_list[i].board));
+	}
+
+	return value;
+}
+
+// MAX-VALUE(state)
+int MinimaxPlayer::max_value(OthelloBoard* b) {
+	if(terminal_test(b)) {
+		return utility(b);
+	}
+	int value = -100;
+	int num_of_successors = 0;
+	int i = 0;
+	MinimaxPlayer::OthelloNode successors[(b->get_num_cols() * b->get_num_rows()) - 4];
+
+	MinimaxPlayer::OthelloNode* successor_list = get_successors(successors, b, num_of_successors);
+
+	for(i = 0; i < num_of_successors; i++) {
+		value = std::max(value, min_value(successor_list[i].board));
+	}
+
+	return value;
+}
+
+// Terminal is reached when there are no more moves left for either player to make.
+bool MinimaxPlayer::terminal_test(OthelloBoard* b) {
+	if((b->has_legal_moves_remaining(b->get_p1_symbol()) == 0) && (b->has_legal_moves_remaining(b->get_p2_symbol()) == 0)){
+		return TRUE;
+	} else {
+		return FALSE;
+	}
+}
+
+// Utility is based on the score differential. Positive means there are more P1
+// pieces, whereas negative means more P2 pieces.
+int MinimaxPlayer::utility(OthelloBoard* b) {
+	int value = b->count_score(b->get_p1_symbol()) - b->count_score(b->get_p2_symbol());
+	return value;
+}
+
+// 1. Determine if this is player 1 or 2 going.
+// 2. Find each board obtainable by one move.
+// 3. For each board state run min_value().
+// 4. Choose the move that goes to the MIN/MAX value branch.
+//    This depends on who is MIN and who is MAX. Given in step 1.
+void MinimaxPlayer::get_move(OthelloBoard* b, int& col, int& row) {
+	char player;
+	int maxvalue = -1;
+	int minvalue = 1;
+	int best_board = 0;
+	int i = 0;
+	int num_of_successors = 0;
+	MinimaxPlayer::OthelloNode successors[(b->get_num_cols() * b->get_num_rows()) - 4];
+
+	MinimaxPlayer::OthelloNode* successor_list = get_successors(successors, b, num_of_successors);
+
+	for(i = 0; i < num_of_successors; i++){
+
+		//IF: Player #1
+		if(b->get_p1_symbol() == symbol) {
+			int temp_value = max_value(successor_list[i].board);
+			if (temp_value > maxvalue){
+				maxvalue = temp_value;
+				best_board = i;
+			}
+		//ELSE-IF: Player #2
+		} else {
+			int temp_value = min_value(successor_list[i].board);
+			if (temp_value < minvalue){
+				minvalue = temp_value;
+				best_board = i;
+			}
+		}
+	}
+
+	col = successor_list[best_board].column;
+	row = successor_list[best_board].row;
 }
 
 MinimaxPlayer* MinimaxPlayer::clone() {

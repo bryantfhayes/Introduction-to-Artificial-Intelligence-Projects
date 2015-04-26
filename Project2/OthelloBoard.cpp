@@ -26,8 +26,6 @@ void OthelloBoard::initialize() {
 	set_cell(num_cols / 2, num_rows / 2, p1_symbol);
 	set_cell(num_cols / 2 - 1, num_rows / 2, p2_symbol);
 	set_cell(num_cols / 2, num_rows / 2 - 1, p2_symbol);
-
-
 }
 
 OthelloBoard& OthelloBoard::operator=(const OthelloBoard& rhs) {
