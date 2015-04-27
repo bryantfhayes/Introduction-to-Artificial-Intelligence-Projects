@@ -2,6 +2,7 @@
 #include <cstring>
 #include <stdlib.h>
 #include "GameDriver.h"
+#include <time.h>
 
 GameDriver::GameDriver(char* p1type, char* p2type, int num_rows, int num_cols) {
 	if( strcmp(p1type,"human") == 0 ) {
@@ -82,15 +83,25 @@ void GameDriver::process_move(Player* curr_player, Player* opponent) {
 }
 
 void GameDriver::run() {
+	srand (time(NULL));
+
 	int toggle = 0;
 	Player* current = p1;
 	Player* opponent = p2;
 
 	display();
 	std::cout << "Player 1 (" << p1->get_symbol() << ") move:\n";
-	while (board->has_legal_moves_remaining(current->get_symbol())) {
-		process_move(current, opponent);
-		display();
+	while (board->has_legal_moves_remaining(current->get_symbol()) || board->has_legal_moves_remaining(opponent->get_symbol())) {
+		if(!board->has_legal_moves_remaining(current->get_symbol())) {
+			printf("No moves available for current player\n");
+		} else {
+			process_move(current, opponent);
+			display();
+		}
+
+		// process_move(current, opponent);
+		// display();
+
 		toggle = (toggle + 1) % 2;
 		if (toggle == 0) {
 			current = p1;
@@ -103,7 +114,7 @@ void GameDriver::run() {
 		}
 	}
 
-	if ( board->count_score(p1->get_symbol()) == board->count_score(p2->get_symbol())) {
+	if (board->count_score(p1->get_symbol()) == board->count_score(p2->get_symbol())) {
 		std::cout << "Tie game" << std::endl;
 	} else if ( board->count_score(p1->get_symbol()) > board->count_score(p2->get_symbol())) {
 		std::cout << "Player 1 wins" << std::endl;

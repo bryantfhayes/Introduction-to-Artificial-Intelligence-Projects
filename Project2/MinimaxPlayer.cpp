@@ -46,6 +46,7 @@ MinimaxPlayer::OthelloNode* MinimaxPlayer::get_successors(OthelloNode* successor
 
 // MIN-VALUE(state)
 int MinimaxPlayer::min_value(OthelloBoard* b) {
+	//std::cout << "LOOP2\n";
 	if(terminal_test(b)) {
 		return utility(b);
 	}
@@ -125,6 +126,7 @@ void MinimaxPlayer::get_move(OthelloBoard* b, int& col, int& row) {
 			}
 		//ELSE-IF: Player #2
 		} else {
+			//std::cout << "LOOP1\n";
 			int temp_value = min_value(successor_list[i].board);
 			if (temp_value < minvalue){
 				minvalue = temp_value;
