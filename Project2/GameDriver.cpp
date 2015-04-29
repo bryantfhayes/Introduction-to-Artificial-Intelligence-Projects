@@ -4,6 +4,8 @@
 #include "GameDriver.h"
 #include <time.h>
 
+int iterations;
+
 GameDriver::GameDriver(char* p1type, char* p2type, int num_rows, int num_cols) {
 	if( strcmp(p1type,"human") == 0 ) {
 		p1 = new HumanPlayer('X');
@@ -118,6 +120,8 @@ void GameDriver::run() {
 		std::cout << "Tie game" << std::endl;
 	} else if ( board->count_score(p1->get_symbol()) > board->count_score(p2->get_symbol())) {
 		std::cout << "Player 1 wins" << std::endl;
+		printf("Iterations: %d\n", iterations);
+		exit(-1);
 	} else {
 		std::cout << "Player 2 wins" << std::endl;
 	}
@@ -128,7 +132,11 @@ int main(int argc, char** argv) {
 		std::cout << "Usage: othello <player1 type> <player2 type>" << std::endl;
 		exit(-1);
 	}
+	iterations = 0;
+	//while(1) {
 	GameDriver* game = new GameDriver(argv[1],argv[2],4,4);
 	game->run();
+	//	iterations++;
+	//}
 	return 0;
 }

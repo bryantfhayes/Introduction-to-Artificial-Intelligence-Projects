@@ -18,9 +18,6 @@
 class OthelloBoard : public Board {
 public:
 
-	OthelloBoard** child;
-	OthelloBoard* neighbor;
-
 	/**
 	 * @cols The number of columns in the game of Othello
 	 * @rows The number of rows in the game of Othello

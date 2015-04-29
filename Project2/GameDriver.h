@@ -12,7 +12,6 @@
  */
 class GameDriver {
 public:
-
 	/**
 	 * @param p1type A string (human or minimax) describing the type of Player1
 	 * @param p2type A string (human or minimax) describing the type of Player2

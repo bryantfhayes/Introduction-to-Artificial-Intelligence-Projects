@@ -26,6 +26,8 @@ public:
 		OthelloBoard* board;
 	};
 
+	char current_symbol;
+
 	/**
 	 * @param symb This is the symbol for the minimax player's pieces
 	 */
