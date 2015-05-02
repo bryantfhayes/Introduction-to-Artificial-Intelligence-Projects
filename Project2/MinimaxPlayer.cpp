@@ -45,6 +45,11 @@ MinimaxPlayer::OthelloNode* MinimaxPlayer::get_successors(OthelloNode* successor
 }
 
 // MIN-VALUE(state)
+// 1. Initialize an array to hold all successor boards
+// 2. Make current player = P2
+// 3. Generate Successor array
+// 4. For each successor run max_value
+// 5. Of all possible boards choose the min value and return that value
 int MinimaxPlayer::min_value(OthelloBoard* b) {
 	//std::cout << "LOOP2\n";
 	if(terminal_test(b)) {
@@ -55,22 +60,22 @@ int MinimaxPlayer::min_value(OthelloBoard* b) {
 	int i = 0;
 	MinimaxPlayer::OthelloNode successors[(b->get_num_cols() * b->get_num_rows()) - 4];
 
+	current_symbol = b->get_p2_symbol();
 	MinimaxPlayer::OthelloNode* successor_list = get_successors(successors, b, num_of_successors);
 
 	for(i = 0; i < num_of_successors; i++) {
 		value = std::min(value, max_value(successor_list[i].board));
 	}
 
-	if (current_symbol == b->get_p1_symbol()) {
-		current_symbol = b->get_p2_symbol();
-	} else {
-		current_symbol = b->get_p1_symbol();
-	}
-
 	return value;
 }
 
 // MAX-VALUE(state)
+// 1. Initialize an array to hold all successor boards
+// 2. Make current player = P1
+// 3. Generate Successor array
+// 4. For each successor run min_value
+// 5. Of all possible boards choose the max value and return that value
 int MinimaxPlayer::max_value(OthelloBoard* b) {
 	if(terminal_test(b)) {
 		return utility(b);
@@ -80,16 +85,11 @@ int MinimaxPlayer::max_value(OthelloBoard* b) {
 	int i = 0;
 	MinimaxPlayer::OthelloNode successors[(b->get_num_cols() * b->get_num_rows()) - 4];
 
+	current_symbol = b->get_p1_symbol();
 	MinimaxPlayer::OthelloNode* successor_list = get_successors(successors, b, num_of_successors);
 
 	for(i = 0; i < num_of_successors; i++) {
 		value = std::max(value, min_value(successor_list[i].board));
-	}
-
-	if (current_symbol == b->get_p1_symbol()) {
-		current_symbol = b->get_p2_symbol();
-	} else {
-		current_symbol = b->get_p1_symbol();
 	}
 
 	return value;

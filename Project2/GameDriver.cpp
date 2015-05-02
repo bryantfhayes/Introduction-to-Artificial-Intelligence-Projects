@@ -93,6 +93,9 @@ void GameDriver::run() {
 
 	display();
 	std::cout << "Player 1 (" << p1->get_symbol() << ") move:\n";
+
+
+	/* MODIFIED: Changed to make game go until very end, rather than stopping early.*/
 	while (board->has_legal_moves_remaining(current->get_symbol()) || board->has_legal_moves_remaining(opponent->get_symbol())) {
 		if(!board->has_legal_moves_remaining(current->get_symbol())) {
 			printf("No moves available for current player\n");
@@ -100,9 +103,6 @@ void GameDriver::run() {
 			process_move(current, opponent);
 			display();
 		}
-
-		// process_move(current, opponent);
-		// display();
 
 		toggle = (toggle + 1) % 2;
 		if (toggle == 0) {
@@ -120,8 +120,6 @@ void GameDriver::run() {
 		std::cout << "Tie game" << std::endl;
 	} else if ( board->count_score(p1->get_symbol()) > board->count_score(p2->get_symbol())) {
 		std::cout << "Player 1 wins" << std::endl;
-		printf("Iterations: %d\n", iterations);
-		exit(-1);
 	} else {
 		std::cout << "Player 2 wins" << std::endl;
 	}
@@ -133,10 +131,8 @@ int main(int argc, char** argv) {
 		exit(-1);
 	}
 	iterations = 0;
-	//while(1) {
 	GameDriver* game = new GameDriver(argv[1],argv[2],4,4);
 	game->run();
-	//	iterations++;
-	//}
+
 	return 0;
 }

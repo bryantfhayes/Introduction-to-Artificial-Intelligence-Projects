@@ -1,0 +1,16 @@
+Author: Bryant Hayes
+Last Modified: May 1st 2015
+**Skeleton/Base code supplied by Dr.Wong
+
+
+To Compile:
+>>make
+
+To Run
+>>./othello human minimax
+
+Notes:
+
+1) Fixed bug that stopped game early.
+2) Running with MINIMAX as player 2 results in player 2 always winning.
+3) Made random move generator for P1 and ran it for 10,000+ games and P2 never lost.
