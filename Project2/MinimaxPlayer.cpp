@@ -13,6 +13,7 @@ using std::vector;
 
 #define TRUE 1
 #define FALSE 0
+#define MAX_DEPTH 5
 
 
 MinimaxPlayer::MinimaxPlayer(char symb) :
@@ -50,9 +51,9 @@ MinimaxPlayer::OthelloNode* MinimaxPlayer::get_successors(OthelloNode* successor
 // 3. Generate Successor array
 // 4. For each successor run max_value
 // 5. Of all possible boards choose the min value and return that value
-int MinimaxPlayer::min_value(OthelloBoard* b) {
+int MinimaxPlayer::min_value(OthelloBoard* b, int depth) {
 	//std::cout << "LOOP2\n";
-	if(terminal_test(b)) {
+	if(terminal_test(b, depth)) {
 		return utility(b);
 	}
 	int value = 100;
@@ -64,7 +65,11 @@ int MinimaxPlayer::min_value(OthelloBoard* b) {
 	MinimaxPlayer::OthelloNode* successor_list = get_successors(successors, b, num_of_successors);
 
 	for(i = 0; i < num_of_successors; i++) {
-		value = std::min(value, max_value(successor_list[i].board));
+		value = std::min(value, max_value(successor_list[i].board, depth+1));
+	}
+
+	for(i = 0; i < num_of_successors; i++) {
+		delete successor_list[i].board;
 	}
 
 	return value;
@@ -76,8 +81,8 @@ int MinimaxPlayer::min_value(OthelloBoard* b) {
 // 3. Generate Successor array
 // 4. For each successor run min_value
 // 5. Of all possible boards choose the max value and return that value
-int MinimaxPlayer::max_value(OthelloBoard* b) {
-	if(terminal_test(b)) {
+int MinimaxPlayer::max_value(OthelloBoard* b, int depth) {
+	if(terminal_test(b, depth)) {
 		return utility(b);
 	}
 	int value = -100;
@@ -89,15 +94,15 @@ int MinimaxPlayer::max_value(OthelloBoard* b) {
 	MinimaxPlayer::OthelloNode* successor_list = get_successors(successors, b, num_of_successors);
 
 	for(i = 0; i < num_of_successors; i++) {
-		value = std::max(value, min_value(successor_list[i].board));
+		value = std::max(value, min_value(successor_list[i].board, depth+1));
 	}
 
 	return value;
 }
 
 // Terminal is reached when there are no more moves left for either player to make.
-bool MinimaxPlayer::terminal_test(OthelloBoard* b) {
-	if( !(b->has_legal_moves_remaining(b->get_p1_symbol())) && !(b->has_legal_moves_remaining(b->get_p2_symbol())) ) {
+bool MinimaxPlayer::terminal_test(OthelloBoard* b, int depth) {
+	if( (!(b->has_legal_moves_remaining(b->get_p1_symbol())) && !(b->has_legal_moves_remaining(b->get_p2_symbol()))) || (depth >= MAX_DEPTH) ) {
 		// At a leaf node
 		return TRUE;
 	} else {
@@ -125,14 +130,13 @@ void MinimaxPlayer::get_move(OthelloBoard* b, int& col, int& row) {
 	int best_board = 0;
 	int i = 0;
 	int num_of_successors = 0;
+	int depth = 0;
 
 	current_symbol = symbol;
 
 	MinimaxPlayer::OthelloNode successors[(b->get_num_cols() * b->get_num_rows()) - 4];
 
 	MinimaxPlayer::OthelloNode* successor_list = get_successors(successors, b, num_of_successors);
-
-	printf("There were %d possible moves\n", num_of_successors);
 
 	if (current_symbol == b->get_p1_symbol()) {
 		current_symbol = b->get_p2_symbol();
@@ -144,15 +148,14 @@ void MinimaxPlayer::get_move(OthelloBoard* b, int& col, int& row) {
 
 		// IF: Player #1
 		if(b->get_p1_symbol() == symbol) {
-			int temp_value = min_value(successor_list[i].board);
+			int temp_value = min_value(successor_list[i].board, depth+1);
 			if (temp_value > maxvalue){
 				maxvalue = temp_value;
 				best_board = i;
 			}
 		// ELSE-IF: Player #2
 		} else {
-			//std::cout << "LOOP1\n";
-			int temp_value = max_value(successor_list[i].board);
+			int temp_value = max_value(successor_list[i].board, depth+1);
 			if (temp_value < minvalue){
 				minvalue = temp_value;
 				best_board = i;

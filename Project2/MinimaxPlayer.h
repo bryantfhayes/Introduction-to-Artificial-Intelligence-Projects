@@ -53,9 +53,9 @@ public:
 
 private:
 	OthelloNode* get_successors(OthelloNode* successors, OthelloBoard* current_board, int& num_of_successors);
-	int max_value(OthelloBoard* b);
-	int min_value(OthelloBoard* b);
-	bool terminal_test(OthelloBoard* b);
+	int max_value(OthelloBoard* b, int depth);
+	int min_value(OthelloBoard* b, int depth);
+	bool terminal_test(OthelloBoard* b, int depth);
 	int utility(OthelloBoard* b);
 };
 

@@ -53,6 +53,7 @@ Board& Board::operator=(const Board& rhs) {
 }
 
 Board::~Board() {
+	//std::cout << "DELETE" << std::endl;
 	delete_grid();
 }
 
@@ -103,4 +104,3 @@ void Board::display() const {
 	}
 	std::cout << "\n\n";
 }
-

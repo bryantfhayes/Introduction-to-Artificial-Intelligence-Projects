@@ -4,6 +4,8 @@
 #include "GameDriver.h"
 #include <time.h>
 
+#define BOARD_SIZE 8
+
 int iterations;
 
 GameDriver::GameDriver(char* p1type, char* p2type, int num_rows, int num_cols) {
@@ -131,7 +133,7 @@ int main(int argc, char** argv) {
 		exit(-1);
 	}
 	iterations = 0;
-	GameDriver* game = new GameDriver(argv[1],argv[2],4,4);
+	GameDriver* game = new GameDriver(argv[1],argv[2],BOARD_SIZE,BOARD_SIZE);
 	game->run();
 
 	return 0;
