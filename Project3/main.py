@@ -1,8 +1,44 @@
-import sys, os, random, re
+import sys, os, random, re, math
+
+vocabSize = 0
+Nx = 1.0
 
 # -------------------------
 # BEGIN PREPROCESSING PHASE
 # -------------------------
+
+class BayesFeature():
+    def __init__(self, word, idx, features):
+        global vocabSize, Nx
+        self.ff = 0
+        self.ft = 0
+        self.tf = 0
+        self.tt = 0
+        self.clf = 0
+        self.clt = 0
+        for feature in features:
+            if feature[-1] == 0:
+                self.clf += 1
+                if feature[idx] == 0:
+                    self.ff += 1
+                else:
+                    self.tf += 1
+            else:
+                self.clt += 1
+                if feature[idx] == 0:
+                    self.ft += 1
+                else:
+                    self.tt += 1
+        self.probabilities = [[float(float(self.ff + Nx)/(self.clf + vocabSize)),float(float(self.ft + Nx)/(self.clt + vocabSize))], [float(float(self.tf + Nx)/(self.clf + vocabSize)), float(float(self.tt + Nx)/(self.clt + vocabSize))]]
+
+    def getProb(self, x, y):
+        return self.probabilities[x][y]
+
+    def clProb(self, x):
+        if x:
+            return float(self.clt) / (self.clt + self.clf)
+        else:
+            return float(self.clf) / (self.clt + self.clf)
 
 class Vocabulary():
     def __init__(self):
@@ -28,10 +64,12 @@ class Vocabulary():
             return 0
 
     def buildArray(self):
+        global vocabSize
         for key, val in self._words.iteritems():
             if val > 5:
                 self.commonWords.append(key)
         self.commonWords = sorted(self.commonWords)
+        vocabSize = len(self.commonWords)
 
 # Read each line of a file into a 2D array containing sentence and class label
 # PARAMS: Name of the file to read. Must be in working directory.
@@ -145,13 +183,32 @@ def savePreprocessedData(vocab, features, filename):
 # Formulate dictionary of vocab words with their associated percentages in the form of a truth table
 # PARAMS: Vocab list, training data set in featurized form
 # RETURN: Dictionary containing all probabilities P(word1 | sarcastic), P(word2 | sarcastic), ... etc
-def train():
-    pass
+def train(vocab, trainingFeatures):
+    bayesData = {}
+    for idx, word in enumerate(vocab.commonWords):
+        bayesData[word] = BayesFeature(word, idx, trainingFeatures)
+        print bayesData[word].getProb(0,0),bayesData[word].getProb(0,1),bayesData[word].getProb(1,0),bayesData[word].getProb(1,1)
+    return bayesData
 
 # Looks at the vocab dictionary given the current featurized list. Tries both sarcastic=1 and sarcastic=0.
 # Finds the product of each class label and chooses the most probable one.
-def classify():
-    pass
+def classify(vocab, bayesData, feature):
+    true_product = 1.0
+    false_product = 1.0
+    for i in xrange(len(vocab.commonWords)):
+        true_product += math.log10(float(bayesData[vocab.commonWords[i]].getProb(feature[i], 1)))
+        false_product += math.log10(float(bayesData[vocab.commonWords[i]].getProb(feature[i], 0)))
+        #print true_product
+    true_product += math.log10(float(bayesData[vocab.commonWords[0]].clProb(1)))
+    false_product += math.log10(float(bayesData[vocab.commonWords[0]].clProb(0)))
+
+    print true_product
+    print false_product
+
+    if true_product >= false_product:
+        return 1
+    else:
+        return 0
 
 def analyzeResults():
     pass
@@ -183,6 +240,11 @@ def main():
     # Save each feature list to a file
     savePreprocessedData(vocab, trainingFeatures, "preprocessed_train.txt")
     savePreprocessedData(vocab, testFeatures, "preprocessed_test.txt")
+
+    bayesData = train(vocab, trainingFeatures)
+
+    print classify(vocab, bayesData, trainingFeatures[int(sys.argv[1])])
+
 
 if __name__ == "__main__":
     main()
