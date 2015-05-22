@@ -1,7 +1,22 @@
 Project 3: The Sarcasm Detector
+Author: Bryant Hayes
 
 Goals: 
   1) Pre-process data into vectors
   2) Classify using naive bayes nets
 
+How to use:
+  
+  python main.py <training> or <test>
+
+  ex)
+    - To run classifier on training set:
+        
+        python main.py training
+
+    - To run classifier on test set:
+
+        python main.py test
+
+    ** In either case the training set trains the classifier to start
 

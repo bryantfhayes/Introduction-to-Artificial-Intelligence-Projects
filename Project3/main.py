@@ -1,3 +1,10 @@
+# Title: Sarcasm Detector
+# Author: Bryant Hayes
+# Last Modified: May 21st 2015
+# Description: Machine learning exercise to build an AI capable of determining
+#              whether or not a given sentence is sarcastic based on its
+#              previous training.
+
 import sys, os, random, re, math
 
 # GLOBAL VARIABLES

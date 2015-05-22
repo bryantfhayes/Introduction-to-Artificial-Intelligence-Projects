@@ -1,0 +1,22 @@
+Trained by: training_text.txt
+    Ran on: training_text.txt      
+===========================
+ False positives:     5
+ False negatives:     21
+ Correct:             154
+ Incorrect:           26
+ --------------------------
+ Accuracy:            85.56%
+
+
+
+Trained by: training_text.txt
+    Ran on: test_text.txt     
+===========================
+ False positives:     8
+ False negatives:     34
+ Correct:             138
+ Incorrect:           42
+ --------------------------
+ Accuracy:            76.67%
+
