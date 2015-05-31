@@ -1,22 +1,26 @@
 Trained by: training_text.txt
-    Ran on: training_text.txt      
+    Ran on: training_text.txt
+
 ===========================
- False positives:     5
- False negatives:     21
- Correct:             154
- Incorrect:           26
- --------------------------
- Accuracy:            85.56%
+False positives:     2
+False negatives:     22
+Correct:             156
+Incorrect:           24
+--------------------------
+Accuracy:            86.67%
 
 
 
 Trained by: training_text.txt
-    Ran on: test_text.txt     
-===========================
- False positives:     8
- False negatives:     34
- Correct:             138
- Incorrect:           42
- --------------------------
- Accuracy:            76.67%
+    Ran on: test_text.txt
 
+===========================
+False positives:     12
+False negatives:     36
+Correct:             132
+Incorrect:           48
+--------------------------
+Accuracy:            73.33%
+
+
+* Vocabulary consists of words seen 5 OR MORE times.

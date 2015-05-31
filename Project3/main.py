@@ -85,7 +85,7 @@ class Vocabulary():
     # Build an alphabetized array from the word dictionary
     def buildArray(self):
         for key, val in self._words.iteritems():
-            if val > 5:
+            if val >= 5:
                 self.commonWords.append(key)
         self.commonWords = sorted(self.commonWords)
 
